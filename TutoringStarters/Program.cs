@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualBasic;
+﻿using System.Runtime.Serialization.Formatters.Binary;
 
 namespace TutoringStarters
 {
@@ -6,8 +6,14 @@ namespace TutoringStarters
     {
         static void Main(string[] args)
         {
-            readonly DateTime WEEKZERO = new DateTime(2023, 03, 27);
-            Console.WriteLine("Hello, World!");
+            DateTime weekZero = new DateTime(2023, 03, 27);
+            Console.WriteLine(CalculateWeekOffset(DateTime.Today, weekZero));
+        }
+
+        static int CalculateWeekOffset(DateTime currentDay, DateTime weekZero)
+        {
+            DateTime nextMonday = currentDay.AddDays((8-(int)currentDay.DayOfWeek) % 7); //Calculation to find the next monday
+            return (int)(nextMonday - weekZero).TotalDays / 7; //Find the difference in days and divide by 7 to get weeks.
         }
 
     }
@@ -17,11 +23,16 @@ namespace TutoringStarters
         static void Save(Topic[] topics, int weekCounter, string filename)
         {
             FileStream outputStream = new FileStream(filename, FileMode.Create, FileAccess.Write);
-            BinaryWriter writer = new BinaryWriter(outputStream);
+            BinaryFormatter formatter = new BinaryFormatter();
+            formatter.Serialize(outputStream, topics);
 
         }
 
-
+        static (Topic[], int) Read(string filename)
+        {
+            FileStream inputStream = new FileStream(filename, FileMode.Open, FileAccess.Read);
+            BinaryReader reader = new BinaryReader(inputStream);
+        }
     }
 
     public class Topic
