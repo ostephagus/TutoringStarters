@@ -11,8 +11,13 @@ namespace TutoringStarters
     {
         public static void Main(string[] args)
         {
-            (DateTime weekZero, Topic[] topics) = FileHandler.Read("topics.bin");
-
+            Topic[] topics =
+            {
+                new Topic("Algebra: Unknowns on both sides", 3),
+                new Topic("Probability: Venn Diagrams", 4),
+                new Topic("Proportional Representation: multiplying fractions", 2)
+            };
+            FileHandler.Save(topics, "topics.bin");
         }
 
         public static Topic CreateNewTopic()
@@ -42,10 +47,10 @@ namespace TutoringStarters
             topic.Difficulty = difficulty;
         }
 
-        public static Topic[] GetTop5(Topic[] topics)
-        {
+        //public static Topic[] GetTop5(Topic[] topics)
+        //{
 
-        }
+        //}
     }
 
     public static class FileHandler
@@ -88,17 +93,18 @@ namespace TutoringStarters
             return bytes.ToArray();
         }
 
-        public static (DateTime, Topic[]) Read(string filename)
-        {
-            /// <summary>
-            /// Reads in a serialised binary file and return its constituent Topic objects.
-            /// </summary>
-            /// <param name="filename">The filename, including file extension, to read from.</param>
-            /// <returns>A tuple with a Topic[] containing the file's topic objects, and an integer which counts weeks.</returns>
-            FileStream inputStream = new FileStream(filename, FileMode.Open, FileAccess.Read);
-            BinaryReader reader = new BinaryReader(inputStream);
-            //TODO: Need to implement binary deserialisation
-        }
+        //public static (DateTime, Topic[]) Read(string filename)
+        //{
+        //    /// <summary>
+        //    /// Reads in a serialised binary file and return its constituent Topic objects.
+        //    /// </summary>
+        //    /// <param name="filename">The filename, including file extension, to read from.</param>
+        //    /// <returns>A tuple with a Topic[] containing the file's topic objects, and an integer which counts weeks.</returns>
+        //    FileStream inputStream = new FileStream(filename, FileMode.Open, FileAccess.Read);
+        //    BinaryReader reader = new BinaryReader(inputStream);
+            
+
+        //}
     }
 
     public class Topic
