@@ -1,5 +1,7 @@
 ﻿
 
+using System.Globalization;
+
 namespace TutoringStarters
 {
     //PLAN:
@@ -18,6 +20,12 @@ namespace TutoringStarters
                 new Topic("Proportional Representation: multiplying fractions", 2)
             };
             FileHandler.Save(topics, "topics.bin");
+
+            Topic[] topicsDeserialised = FileHandler.Read("topics.bin");
+            for (int i = 0; i < topicsDeserialised.Length; i++)
+            {
+                Console.WriteLine(topics[i].Equals(topicsDeserialised[i]));
+            }
         }
 
         public static Topic CreateNewTopic()
@@ -78,7 +86,7 @@ namespace TutoringStarters
             List<byte> bytes = new List<byte>();
             bytes.AddRange(SerialiseString(topic.Name));
             bytes.Add((byte)topic.Difficulty);
-            bytes.AddRange(BitConverter.GetBytes(topic.CreationDate.ToBinary()));
+            bytes.AddRange(BitConverter.GetBytes(topic.LastStudied.ToBinary()));
             return bytes.ToArray();
         }
 
@@ -93,55 +101,73 @@ namespace TutoringStarters
             return bytes.ToArray();
         }
 
-        //public static (DateTime, Topic[]) Read(string filename)
-        //{
-        //    /// <summary>
-        //    /// Reads in a serialised binary file and return its constituent Topic objects.
-        //    /// </summary>
-        //    /// <param name="filename">The filename, including file extension, to read from.</param>
-        //    /// <returns>A tuple with a Topic[] containing the file's topic objects, and an integer which counts weeks.</returns>
-        //    FileStream inputStream = new FileStream(filename, FileMode.Open, FileAccess.Read);
-        //    BinaryReader reader = new BinaryReader(inputStream);
-            
-
-        //}
+        public static Topic[] Read(string filename)
+        {
+            /// <summary>
+            /// Reads in a serialised binary file and return its constituent Topic objects.
+            /// </summary>
+            /// <param name="filename">The filename, including file extension, to read from.</param>
+            /// <returns>A tuple with a Topic[] containing the file's topic objects, and an integer which counts weeks.</returns>
+            List<Topic> topics = new List<Topic>();
+            FileStream inputStream = new FileStream(filename, FileMode.Open, FileAccess.Read);
+            BinaryReader reader = new BinaryReader(inputStream);
+            while (inputStream.Position < inputStream.Length) //While the current position is before the end of the file
+            {
+                byte nextByte = reader.ReadByte();
+                string description = "";
+                while (nextByte != 4) //Loop for reading the Topic's description. 4 is ascii end of transmission (EOT)
+                {
+                    description += (char)nextByte;
+                    nextByte = reader.ReadByte();
+                }
+                int difficulty = reader.ReadByte();
+                DateTime lastStudied = DateTime.FromBinary(BitConverter.ToInt64(reader.ReadBytes(8))); //Complex deserialisation from 8 bytes to a long and then to a datetime.
+                topics.Add(new Topic(description, difficulty, lastStudied));
+            }
+            return topics.ToArray();
+        }
     }
 
-    public class Topic
+    public class Topic : IEquatable<Topic>
     {
         private string name;
         private int difficulty;
-        private readonly DateTime creationDate;
+        private readonly DateTime lastStudied;
 
         public string Name { get => name; set => name = value; }
         public int Difficulty { get => difficulty; set => difficulty = value; }
         public double RememberingLevel { get => CalculateRememberingLevel(); }
-        public DateTime CreationDate { get => creationDate; }
+        public DateTime LastStudied { get => lastStudied; }
 
-        public Topic(string name, int difficulty, DateTime creationDate)
+        public Topic(string name, int difficulty, DateTime lastStudied)
         {
             this.name = name;
             this.difficulty = difficulty;
-            this.creationDate = creationDate;
+            this.lastStudied = lastStudied;
         }
         public Topic(string name, int difficulty)
         {
             this.name = name;
             this.difficulty = difficulty;
-            creationDate = DateTime.Today;
+            lastStudied = DateTime.Today;
         }
 
         private int CalculateWeekOffset()
         {
             DateTime today = DateTime.Today;
             DateTime nextMonday = today.AddDays((8 - (int)today.DayOfWeek) % 7); //Calculation to find the next monday
-            return (int)(nextMonday - creationDate).TotalDays / 7; //Find the difference in days and divide by 7 to get weeks.
+            return (int)(nextMonday - lastStudied).TotalDays / 7; //Find the difference in days and divide by 7 to get weeks.
         }
 
         private double CalculateRememberingLevel()
         {
             //Use of modified sigmoid logistic function, 1/(1+e^(kt-6))
             return 1 / (1 + Math.Exp(difficulty * CalculateWeekOffset() - 6));
+        }
+
+        public bool Equals(Topic other)
+        {
+            return name == other.Name && difficulty == other.difficulty && lastStudied == other.lastStudied;
         }
     }
 }
