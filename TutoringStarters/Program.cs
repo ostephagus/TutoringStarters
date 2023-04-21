@@ -7,7 +7,7 @@ namespace TutoringStarters
     //PLAN:
     //Each topic has a Topic object, that stores the current level of remembering.
     //A handler will manage ensuring that the Topics are up to date, since the level of remembering is a function of time and difficulty
-    //Topics will also have their own serialisation method, to store the topics and a "week zero" which will be used to calculate the time for the remembering level function.
+    //Topics will also have their own serialisation method, to store the topics and a "last studied" to calculate the remembering level.
     //For finding topics to revisit, a subroutine searches the Topics for the lowest remembering level.
     public class Program
     {
@@ -15,17 +15,18 @@ namespace TutoringStarters
         {
             Topic[] topics =
             {
-                new Topic("Algebra: Unknowns on both sides", 3),
-                new Topic("Probability: Venn Diagrams", 4),
-                new Topic("Proportional Representation: multiplying fractions", 2)
+                new Topic("Algebra: Unknowns on both sides", 3, new DateTime(2023, 4, 17)),
+                new Topic("Probability: Venn Diagrams", 4, new DateTime(2023, 4, 17)),
+                new Topic("Proportional Representation: multiplying fractions", 2, new DateTime(2023, 3, 27)),
+                new Topic("Proportional Representation: ratio simplification", 1, new DateTime(2023, 3, 20)),
+                new Topic("Proportional Representation: splitting into ratio", 2, new DateTime(2023, 3, 13)),
+                new Topic("Proportional Representation: adding fractions", 1, new DateTime(2023, 3, 6))
             };
             FileHandler.Save(topics, "topics.bin");
 
             Topic[] topicsDeserialised = FileHandler.Read("topics.bin");
-            for (int i = 0; i < topicsDeserialised.Length; i++)
-            {
-                Console.WriteLine(topics[i].Equals(topicsDeserialised[i]));
-            }
+            Topic[] top5 = GetTop5(topicsDeserialised);
+            
         }
 
         public static Topic CreateNewTopic()
@@ -55,10 +56,35 @@ namespace TutoringStarters
             topic.Difficulty = difficulty;
         }
 
-        //public static Topic[] GetTop5(Topic[] topics)
-        //{
+        public static Topic[] GetTop5(Topic[] topics)
+        {
+            //Go through each topic and find its Remembering Level, based on these assign top 5.
+            
+            List<Topic> top5 = new List<Topic>();
 
-        //}
+            foreach (Topic topic in topics)
+            {
+                double currentRememberingLevel = topic.RememberingLevel;
+                for (int i = 0; i < 5; i++)
+                {
+                    if (i >= top5.Count)
+                    {
+                        top5.Add(topic);
+                        break;
+                    }
+                    else if (currentRememberingLevel < top5[i].RememberingLevel)
+                    {
+                        top5.Insert(i, topic);
+                        break;
+                    }
+                }
+                if (top5.Count > 5) 
+                {
+                    top5.RemoveAt(5); //Keep the list length to 5 (mem efficiency)
+                }
+            }
+            return top5.ToArray();
+        }
     }
 
     public static class FileHandler
